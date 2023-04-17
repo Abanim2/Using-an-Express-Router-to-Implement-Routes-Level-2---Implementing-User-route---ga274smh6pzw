@@ -47,49 +47,48 @@
 
 // module.exports = app;
 
-
-
-
-
 const fs = require('fs');
 const express = require('express');
+const { object } = require('joi');
 const app = express();
-const router = express.Router();
+const router = new express.Router();
 const bodyParser = require('body-parser');
 
 //middleware
 router.use(express.json());
 router.use(bodyParser.json());
 
+const product = JSON.parse(
+  fs.readFileSync(`${__dirname}/../dev-data/product.json`)
+);
+
 // Defining The Router
 // Handling PATCH request
 router.patch('/api/v1/product/:id', (req, res) => {
   try {
-    const productId = req.params.id;
-    const productData = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/product.json`));
-    const productIndex = productData.findIndex((item) => item.id === Number(productId));
+    const id = req.params.id;
+    const productIndex = product.findIndex((p) => p.id == id);
     if (productIndex === -1) {
       return res.status(404).json({
-        message: 'Product not found',
+        message: 'Product Not Found',
         status: 'Error',
       });
     }
-    productData[productIndex] = {
-      ...productData[productIndex],
-      ...req.body,
-      id: Number(productId),
-    };
-    fs.writeFileSync(`${__dirname}/../dev-data/product.json`, JSON.stringify(productData));
-    res.status(200).json({
-      message: 'Product updated successfully',
+    product[productIndex] = Object.assign(product[productIndex], req.body);
+    fs.writeFileSync(
+      `${__dirname}/../dev-data/product.json`,
+      JSON.stringify(product)
+    );
+    return res.status(201).json({
+      message: 'success',
       data: {
-        product: productData,
+        product,
       },
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      message: 'Product updation failed',
+      message: 'Product Updation Failed',
       status: 'Error',
     });
   }
@@ -98,27 +97,29 @@ router.patch('/api/v1/product/:id', (req, res) => {
 //Deleting Product
 router.delete('/api/v1/product/:id', (req, res) => {
   try {
-    const productId = req.params.id;
-    const productData = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/product.json`));
-    const productIndex = productData.findIndex((item) => item.id === Number(productId));
+    const id = req.params.id;
+    const productIndex = product.findIndex((p) => p.id == id);
     if (productIndex === -1) {
       return res.status(404).json({
-        message: 'Product not found',
+        message: 'Product Not Found',
         status: 'Error',
       });
     }
-    productData.splice(productIndex, 1);
-    fs.writeFileSync(`${__dirname}/../dev-data/product.json`, JSON.stringify(productData));
-    res.status(200).json({
-      message: 'Product deleted successfully',
+    product.splice(productIndex, 1);
+    fs.writeFileSync(
+      `${__dirname}/../dev-data/product.json`,
+      JSON.stringify(product)
+    );
+    return res.status(201).json({
+      status: 'success',
       data: {
-        product: productData,
+        product,
       },
     });
   } catch (error) {
     console.log(error);
     res.status(400).json({
-      message: 'Product deletion failed',
+      message: 'Product Deletion Failed',
       status: 'Error',
     });
   }
